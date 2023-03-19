@@ -1,0 +1,79 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true,
+    "mocha": true,
+    "truffle/globals": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2018,
+    "ecmaFeatures": {
+      "spread": true
+    }
+  },
+  "plugins": [
+    "truffle"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/actions.js"
+      ],
+      "rules": {
+        "max-lines-per-function": [
+          "error",
+          {
+            "max": 12,
+            "skipBlankLines": true,
+            "skipComments": true
+          }
+        ]
+      }
+    }
+  ],
+  "rules": {
+    "indent": [
+      2,
+      "tab",
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "camelcase": [
+      "error",
+      {
+        "properties": "never"
+      }
+    ],
+    "brace-style": [
+      "error"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "new-cap": [
+      "error",
+      {
+        "properties": false
+      }
+    ],
+    "no-var": "error",
+    "curly": "error",
+    "no-console": [
+      "error",
+      {
+        "allow": [
+          "error"
+        ]
+      }
+    ]
+  }
+}
