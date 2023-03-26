@@ -8,8 +8,9 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import '@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import '@uniswap/v3-periphery/contracts/base/LiquidityManagement.sol';
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IWrappedToken.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -18,11 +19,14 @@ contract DexManager is Ownable, IERC721Receiver {
     ISwapRouter public immutable swapRouter;
     INonfungiblePositionManager public immutable nonfungiblePositionManager;
 
+    IWrappedToken  public immutable IWrappedETH;
+
+
     address  public immutable WETH;
     address  public immutable TOKEN;
 
     bool private _activated = false;
-    uint24 private _poolFee = 3000;
+    uint24 public poolFee = 3000;
 
     struct Deposit {
         address owner;
@@ -36,25 +40,36 @@ contract DexManager is Ownable, IERC721Receiver {
 
     uint public currentTokenId;
 
-    constructor (ISwapRouter _swapRouter, INonfungiblePositionManager _nonfungiblePositionManager, address token, address weth, uint24 poolFee)  {
+    constructor (ISwapRouter _swapRouter, INonfungiblePositionManager _nonfungiblePositionManager, address token, address weth)  {
         swapRouter = _swapRouter;
         WETH = weth;
         TOKEN = token;
-        _poolFee = poolFee;
+        poolFee = poolFee;
         nonfungiblePositionManager = _nonfungiblePositionManager;
+        IWrappedETH = IWrappedToken(weth);
+
+        IERC20(token).approve(address(_swapRouter), type(uint256).max);
+        IERC20(weth).approve(address(_swapRouter), type(uint256).max);
+        IERC20(token).approve(address(_nonfungiblePositionManager), type(uint256).max);
+        IERC20(weth).approve(address(_nonfungiblePositionManager), type(uint256).max);
     }
 
+
     receive() external payable {
+        swapAndLp();
+    }
+
+    function swapAndLp() public payable {
         if (_activated == false) {
             revert("DexManager: not activated");
         }
 
-        uint256 amountOut = _swapBalance();
-        increaseLiquidityCurrentRange(currentTokenId, amountOut, address(this).balance);
+        (uint tokenAmount,uint ethAmount) = _swapBalance();
+        _increaseLiquidityCurrentRange(currentTokenId, tokenAmount, ethAmount);
     }
 
     function depositNFT(uint256 tokenID) external onlyOwner {
-        ERC721(address(nonfungiblePositionManager)).safeTransferFrom(msg.sender, address(this), tokenID);
+        IERC721(address(nonfungiblePositionManager)).safeTransferFrom(msg.sender, address(this), tokenID);
         setCurrentTokenId(tokenID);
     }
 
@@ -93,14 +108,8 @@ contract DexManager is Ownable, IERC721Receiver {
         // send collected feed back to owner
         _sendToOwner(tokenId, amount0, amount1);
     }
+    function _increaseLiquidityCurrentRange(uint256 tokenId, uint256 amountAdd0, uint256 amountAdd1) public returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
 
-    function increaseLiquidityCurrentRange(uint256 tokenId, uint256 amountAdd0, uint256 amountAdd1) public returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
-
-        TransferHelper.safeTransferFrom(deposits[tokenId].token0, msg.sender, address(this), amountAdd0);
-        TransferHelper.safeTransferFrom(deposits[tokenId].token1, msg.sender, address(this), amountAdd1);
-
-        TransferHelper.safeApprove(deposits[tokenId].token0, address(nonfungiblePositionManager), amountAdd0);
-        TransferHelper.safeApprove(deposits[tokenId].token1, address(nonfungiblePositionManager), amountAdd1);
 
         INonfungiblePositionManager.IncreaseLiquidityParams memory params = INonfungiblePositionManager.IncreaseLiquidityParams({
         tokenId : tokenId,
@@ -130,22 +139,26 @@ contract DexManager is Ownable, IERC721Receiver {
         TransferHelper.safeTransfer(token1, owner, amount1);
     }
 
-    function _swapBalance() private returns (uint256 amountOut){
+    function _swapBalance() private returns (uint tokenAmount, uint ethAmount) {
+        uint balance = address(this).balance;
+        uint firstHalf = balance / 2;
+        ethAmount = balance - firstHalf;
+        IWrappedETH.deposit{value : balance}();
 
         ISwapRouter.ExactInputSingleParams memory params =
         ISwapRouter.ExactInputSingleParams({
         tokenIn : WETH,
         tokenOut : TOKEN,
-        fee : _poolFee,
-        recipient : msg.sender,
+        fee : poolFee,
+        recipient : address(this),
         deadline : block.timestamp,
-        amountIn : address(this).balance / 2,
+        amountIn : firstHalf,
         amountOutMinimum : 0,
         sqrtPriceLimitX96 : 0
         });
 
         // The call to `exactInputSingle` executes the swap.
-        return swapRouter.exactInputSingle(params);
+        return (swapRouter.exactInputSingle(params), ethAmount);
 
     }
 
@@ -153,8 +166,8 @@ contract DexManager is Ownable, IERC721Receiver {
         _activated = active;
     }
 
-    function setPoolFee(uint24 poolFee) external onlyOwner {
-        _poolFee = poolFee;
+    function setPoolFee(uint24 fee) external onlyOwner {
+        poolFee = fee;
     }
 
     function setCurrentTokenId(uint tokenId) public onlyOwner {

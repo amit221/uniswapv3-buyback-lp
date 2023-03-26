@@ -10,7 +10,7 @@ const throwError = (msg) => {
 
 module.exports = async function (deployer, network, accounts) {
 	try {
-		const WETH = network === "poly" ? "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270¶" : "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889";
+		const WETH = network === "poly" ? "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270" : "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889";
 
 		console.log("accounts", accounts);
 
@@ -19,7 +19,7 @@ module.exports = async function (deployer, network, accounts) {
 		await deployer.deploy(Univ3ERC20TestTokenContract, owner, {from: owner});
 		console.log("Univ3ERC20TestTokenContract.address)", Univ3ERC20TestTokenContract.address);
 
-		await deployer.deploy(DexManagerContract, SWAP_ROUTER_ADDRESS, NON_FUNGIBLE_POSITION_MANAGER_ADRRESS, Univ3ERC20TestTokenContract.address, WETH, 3000, {from: owner});
+		await deployer.deploy(DexManagerContract, SWAP_ROUTER_ADDRESS, NON_FUNGIBLE_POSITION_MANAGER_ADRRESS, Univ3ERC20TestTokenContract.address, WETH, {from: owner});
 		console.log("DexManagerContract.address)", DexManagerContract.address);
 
 

@@ -62,7 +62,7 @@ module.exports = {
 			network_id: 137,
 			networkCheckTimeout: 90000,
 			skipDryRun: true,
-			gasPrice: 60 * Math.pow(10, 9),
+			gasPrice: 180 * Math.pow(10, 9),
 			gas: 20000000,
 			provider: function () {
 				return new HDWalletProvider({
