@@ -139,24 +139,24 @@ async function swapAndLp(amount, account) {
 		//await transferNft(account, "0xDfB6Ba7d9DFbE6137dFA800e1FA2346bE6170F94", 10644);
 
 		let tokenId = Number(await DexManagerContract.methods.currentTokenId().call());
-// 		console.log("tokenId", tokenId);
-// 		console.log("getApproved", await INonfungiblePositionManagerAbiContract.methods.getApproved(DEPOSIT_NFT).call());
-// 		await approve(account);
-// 		console.log("approve");
-// 		await depositNFT(account);
-// 		console.log("depositNFT");
-// 		tokenId = Number(await DexManagerContract.methods.currentTokenId().call());
-// 		await activate(true, account);
+		console.log("tokenId", tokenId);
+		console.log("getApproved", await INonfungiblePositionManagerAbiContract.methods.getApproved(DEPOSIT_NFT).call());
+		await approve(account);
+		console.log("approve");
+		await depositNFT(account);
+		console.log("depositNFT");
+		tokenId = Number(await DexManagerContract.methods.currentTokenId().call());
+		await activate(true, account);
+		console.log("activate");
+
+		//await setPoolFee(30, account);
+		console.log(tokenId);
+// await activate(true, account);
 // 		console.log("activate");
-//
-// 		//await setPoolFee(30, account);
-// 		console.log(tokenId);
-// // await activate(true, account);
-// // 		console.log("activate");
-// 		console.log("WETH", await DexManagerContract.methods.WETH().call());
-// 		console.log("DEPOSIT_NFT", await DexManagerContract.methods.deposits(DEPOSIT_NFT).call());
-// 		console.log("swapRouter", await DexManagerContract.methods.swapRouter().call());
-// 		console.log("nonfungiblePositionManager", await DexManagerContract.methods.nonfungiblePositionManager().call());
+		console.log("WETH", await DexManagerContract.methods.WETH().call());
+		console.log("DEPOSIT_NFT", await DexManagerContract.methods.deposits(DEPOSIT_NFT).call());
+		console.log("swapRouter", await DexManagerContract.methods.swapRouter().call());
+		console.log("nonfungiblePositionManager", await DexManagerContract.methods.nonfungiblePositionManager().call());
 
 
 		await swapAndLp(web3.utils.toWei("1", "finney"), account);
