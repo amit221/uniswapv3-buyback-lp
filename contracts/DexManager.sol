@@ -20,7 +20,7 @@ contract DexManager is Ownable, IERC721Receiver {
 
 
     address  public immutable WETH;
-    address  public immutable TOKEN;
+    address  public  TOKEN;
 
     bool public activated = false;
     uint24 public poolFee = 3000;
@@ -40,19 +40,13 @@ contract DexManager is Ownable, IERC721Receiver {
 
     uint public currentTokenId;
 
-    constructor (ISwapRouter _swapRouter, INonfungiblePositionManager _nonfungiblePositionManager, address token, address weth)  {
+    constructor (ISwapRouter _swapRouter, INonfungiblePositionManager _nonfungiblePositionManager, address weth)  {
         swapRouter = _swapRouter;
         WETH = weth;
-        TOKEN = token;
         poolFee = poolFee;
         nonfungiblePositionManager = _nonfungiblePositionManager;
         IWrappedETH = IWrappedToken(weth);
         allowedFeesCollector = msg.sender;
-
-        IERC20(token).approve(address(_swapRouter), type(uint256).max);
-        IERC20(weth).approve(address(_swapRouter), type(uint256).max);
-        IERC20(token).approve(address(_nonfungiblePositionManager), type(uint256).max);
-        IERC20(weth).approve(address(_nonfungiblePositionManager), type(uint256).max);
     }
 
 
@@ -162,5 +156,14 @@ contract DexManager is Ownable, IERC721Receiver {
 
     function setAllowedFeesCollector(address _allowedFeesCollector) external onlyOwner {
         allowedFeesCollector = _allowedFeesCollector;
+    }
+    function setTokenAddress(address token) public onlyOwner {
+        require(TOKEN == address(0), "DexManager: token already set");
+        TOKEN = token;
+
+        IERC20(token).approve(address(swapRouter), type(uint256).max);
+        IERC20(WETH).approve(address(swapRouter), type(uint256).max);
+        IERC20(token).approve(address(nonfungiblePositionManager), type(uint256).max);
+        IERC20(WETH).approve(address(nonfungiblePositionManager), type(uint256).max);
     }
 }
